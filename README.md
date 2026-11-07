@@ -55,10 +55,10 @@ The technologies will be finalized during the development phase.
 
 | Role | Name | Student ID |
 |---|---|---|
-| Team Leader | Shakib Shahriar | Add ID |
-| Member 2 | Add Name | Add ID |
-| Member 3 | Add Name | Add ID |
-| Member 4 | Add Name (if applicable) | Add ID |
+| Team Leader | Shakib Shahriar | 11230321588 |
+| Member 2 | Samia Rahman | 11230321590 |
+| Member 3 | Tanusree Mistry | 11230321465|
+
 
 **Course:** CSE 4104 – Software Development III  
 **Section:** 7G  
