@@ -13,6 +13,7 @@ const diseaseRoutes = require('./routes/diseaseRoutes');
 const farmRoutes = require('./routes/farmRoutes');
 const chatRoutes = require('./routes/chatRoutes');
 const adminRoutes = require('./routes/adminRoutes');
+const feedbackRoutes = require('./routes/feedbackRoutes');
 
 // Load environment variables
 dotenv.config();
@@ -34,7 +35,8 @@ app.use('/api/weather', weatherRoutes);
 app.use('/api/disease', diseaseRoutes);
 app.use('/api/records', farmRoutes);
 app.use('/api/chat', chatRoutes);
-app.use('/api/admin', adminRoutes); // <-- Now this works perfectly
+app.use('/api/admin', adminRoutes); 
+app.use('/api/feedback', feedbackRoutes);// <-- Now this works perfectly
 
 // Test Route
 app.get('/', (req, res) => {

@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { ArrowLeft, Send, Camera, X, MessageSquare, Plus, Loader2, Menu, Mic } from 'lucide-react';
+import { ArrowLeft, Send, Camera, X, MessageSquare, Plus, Loader2, Menu, Mic, ThumbsUp, ThumbsDown, Flag, Bookmark } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import ReactMarkdown from 'react-markdown';
 import imageCompression from 'browser-image-compression';
@@ -26,19 +26,17 @@ const ChatPage = () => {
   const chatEndRef = useRef(null);
   const fileInputRef = useRef(null);
 
-  // FIX: Restore active session on page load
   useEffect(() => {
     if (user) {
       fetchSessions();
-      
       const savedSessionId = localStorage.getItem('activeChatSessionId');
       if (savedSessionId) {
         loadChat(savedSessionId);
       } else {
-        setMessages([{ sender: 'ai', text: lang === 'bn' ? 'হ্যালো! আমি কৃষিবন্ধু এআই।' : 'Hello! I am KrishiBondhu AI.' }]);
+        setMessages([{ sender: 'ai', text: lang === 'bn' ? 'হ্যালো! আমি কৃষিবন্ধু এআই। আপনার ফসলের যেকোনো সমস্যা বা প্রশ্ন আমাকে জানান।' : 'Hello! I am KrishiBondhu AI. Ask me any farming question.' }]);
       }
     } else {
-      setMessages([{ sender: 'ai', text: lang === 'bn' ? 'হ্যালো! আমি কৃষিবন্ধু এআই।' : 'Hello! I am KrishiBondhu AI.' }]);
+      setMessages([{ sender: 'ai', text: lang === 'bn' ? 'হ্যালো! আমি কৃষিবন্ধু এআই। আপনার ফসলের যেকোনো সমস্যা বা প্রশ্ন আমাকে জানান।' : 'Hello! I am KrishiBondhu AI. Ask me any farming question.' }]);
     }
   }, [user]);
 
@@ -73,12 +71,13 @@ const ChatPage = () => {
 
   const loadChat = async (sessionId) => {
     setCurrentSessionId(sessionId);
-    localStorage.setItem('activeChatSessionId', sessionId); // FIX: Save to local storage
+    localStorage.setItem('activeChatSessionId', sessionId);
     setIsSidebarOpen(false);
     setLoading(true);
     try {
       const res = await api.get(`/chat/session/${sessionId}`);
       const formattedMessages = res.data.map(msg => ({
+        _id: msg._id, // Store ID for feedback
         sender: msg.sender === 'USER' ? 'user' : 'ai',
         text: msg.content,
         image: msg.image_url
@@ -86,7 +85,6 @@ const ChatPage = () => {
       setMessages(formattedMessages);
     } catch (error) { 
       console.error(error); 
-      // If the chat was deleted or not found, clear it from local storage
       localStorage.removeItem('activeChatSessionId');
       setCurrentSessionId(null);
       startNewChat();
@@ -95,7 +93,7 @@ const ChatPage = () => {
 
   const startNewChat = () => {
     setCurrentSessionId(null);
-    localStorage.removeItem('activeChatSessionId'); // FIX: Clear from local storage
+    localStorage.removeItem('activeChatSessionId');
     setIsSidebarOpen(false);
     setMessages([{ sender: 'ai', text: lang === 'bn' ? 'নতুন চ্যাট শুরু হয়েছে।' : 'New chat started.' }]);
   };
@@ -115,6 +113,35 @@ const ChatPage = () => {
       } finally {
         setLoading(false);
       }
+    }
+  };
+
+  // NEW: Handle feedback submission
+  const handleFeedback = async (messageId, rating, isFlagged) => {
+    if (!messageId) {
+      return alert(lang === 'bn' ? "অনুগ্রহ করে একটু অপেক্ষা করুন..." : "Please wait a moment for the message to save...");
+    }
+    
+    // Optional: Ask for a comment if flagging
+    let comment = "";
+    if (isFlagged) {
+      comment = prompt(lang === 'bn' ? "কেন আপনি এটি ফ্ল্যাগ করছেন? (ঐচ্ছিক)" : "Why are you flagging this? (Optional)") || "User flagged this response.";
+    }
+
+    try {
+      await api.post('/feedback', {
+        message_id: messageId,
+        rating: rating,
+        is_flagged: isFlagged,
+        comment: comment
+      });
+      
+      alert(isFlagged 
+        ? (lang === 'bn' ? "রেসপন্সটি অ্যাডমিনের কাছে ফ্ল্যাগ করা হয়েছে।" : "Response flagged for Admin review.") 
+        : (lang === 'bn' ? "মতামতের জন্য ধন্যবাদ!" : "Thank you for your feedback!"));
+    } catch (error) {
+      console.error(error);
+      alert(lang === 'bn' ? "মতামত জানাতে সমস্যা হয়েছে।" : "Failed to submit feedback.");
     }
   };
 
@@ -142,7 +169,7 @@ const ChatPage = () => {
         const sessionRes = await api.post('/chat/session', { title });
         activeSessionId = sessionRes.data._id;
         setCurrentSessionId(activeSessionId);
-        localStorage.setItem('activeChatSessionId', activeSessionId); // FIX: Save new session to local storage
+        localStorage.setItem('activeChatSessionId', activeSessionId);
       }
 
       let aiReply = '';
@@ -163,25 +190,36 @@ const ChatPage = () => {
         aiReply = response.data.reply;
       }
 
+      // Save USER message
       if (activeSessionId && user) {
         await api.post('/chat/message', { 
           session_id: activeSessionId, sender: 'USER', content: dbText, image_url: savedImageUrl
         });
       }
 
+      // Update UI with AI Reply (Temporarily without ID)
       setMessages((prev) => {
         const updated = [...prev];
         if (savedImageUrl) updated[updated.length - 1].image = savedImageUrl;
-        updated.push({ sender: 'ai', text: aiReply });
+        updated.push({ sender: 'ai', text: aiReply }); 
         return updated;
       });
 
+      // Save AI message to DB and get the ID
       if (activeSessionId && user) {
-        await api.post('/chat/message', { session_id: activeSessionId, sender: 'AI', content: aiReply });
+        const savedAiMsg = await api.post('/chat/message', { session_id: activeSessionId, sender: 'AI', content: aiReply });
+        
+        // Attach the DB ID to the message in UI so feedback buttons work
+        setMessages(prev => {
+          const updated = [...prev];
+          updated[updated.length - 1]._id = savedAiMsg.data._id; 
+          return updated;
+        });
+        
         fetchSessions(); 
       }
     } catch (error) {
-      setMessages((prev) => [...prev, { sender: 'ai', text: 'দুঃখিত, একটি সমস্যা হয়েছে।' }]);
+      setMessages((prev) => [...prev, { sender: 'ai', text: lang === 'bn' ? 'দুঃখিত, একটি সমস্যা হয়েছে।' : 'Sorry, an error occurred.' }]);
     } finally {
       setLoading(false);
       setSelectedImage(null);
@@ -209,6 +247,7 @@ const ChatPage = () => {
   return (
     <div className="flex h-[calc(100vh-80px)] md:h-[calc(100vh-140px)] bg-[#fcfdfa] rounded-xl overflow-hidden relative border border-gray-200 shadow-sm">
       
+      {/* SIDEBAR */}
       {user && (
         <div className={`absolute md:relative z-40 h-full bg-white border-r border-gray-200 flex flex-col w-64 transition-transform duration-300 ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}`}>
           <div className="p-4 border-b border-gray-200 flex justify-between items-center">
@@ -232,6 +271,7 @@ const ChatPage = () => {
         <div onClick={() => setIsSidebarOpen(false)} className="md:hidden fixed inset-0 bg-black/40 z-30"></div>
       )}
 
+      {/* MAIN CHAT AREA */}
       <div className="flex-1 flex flex-col h-full relative z-10 bg-[#fcfdfa]">
         <div className="flex justify-between items-center p-4 border-b border-gray-200 bg-white">
           <div className="flex items-center gap-2">
@@ -252,13 +292,39 @@ const ChatPage = () => {
             <div key={index} className={`flex flex-col ${msg.sender === 'user' ? 'items-end' : 'items-start'}`}>
               <div className={`max-w-[85%] md:max-w-[75%] p-4 rounded-2xl ${msg.sender === 'user' ? 'bg-[#1b5e20] text-white rounded-tr-none' : 'bg-white border border-gray-200 text-gray-800 rounded-tl-none shadow-sm'}`}>
                 {msg.image && <img src={msg.image} alt="Uploaded" className="w-full rounded-lg mb-2 max-h-48 object-cover" />}
+                
                 <div className={`text-sm leading-relaxed prose prose-sm max-w-none ${msg.sender === 'user' ? 'prose-invert text-white' : 'text-gray-800'}`}>
                   <ReactMarkdown>{msg.text}</ReactMarkdown>
                 </div>
+
+                {/* FEEDBACK BUTTONS FOR AI MESSAGES */}
+                {msg.sender === 'ai' && msg.text && msg.text !== "[ছবি আপলোড করা হয়েছে]" && (
+                  <div className="flex flex-wrap items-center gap-3 mt-4 pt-3 border-t border-gray-100">
+                    <button onClick={() => handleFeedback(msg._id, 'HELPFUL', false)} className="text-gray-400 hover:text-green-600 text-xs flex items-center gap-1 font-semibold transition">
+                      <ThumbsUp size={14}/> Helpful
+                    </button>
+                    <button onClick={() => handleFeedback(msg._id, 'NOT_HELPFUL', false)} className="text-gray-400 hover:text-red-600 text-xs flex items-center gap-1 font-semibold transition">
+                      <ThumbsDown size={14}/> Not Helpful
+                    </button>
+                    <button onClick={() => handleFeedback(msg._id, 'NOT_HELPFUL', true)} className="text-gray-400 hover:text-yellow-600 text-xs flex items-center gap-1 font-semibold transition">
+                      <Flag size={14}/> Flag
+                    </button>
+                    <button className="text-gray-400 hover:text-blue-600 text-xs flex items-center gap-1 font-semibold transition">
+                      <Bookmark size={14}/> Save
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
           ))}
-          {loading && (<div className="flex justify-start"><div className="bg-white border border-gray-200 p-4 rounded-2xl rounded-tl-none shadow-sm flex items-center gap-2 text-green-700 text-sm"><Loader2 size={16} className="animate-spin" /> এআই ভাবছে...</div></div>)}
+          
+          {loading && (
+            <div className="flex justify-start">
+              <div className="bg-white border border-gray-200 p-4 rounded-2xl rounded-tl-none shadow-sm flex items-center gap-2 text-green-700 text-sm">
+                <Loader2 size={16} className="animate-spin" /> এআই ভাবছে...
+              </div>
+            </div>
+          )}
           <div ref={chatEndRef} />
         </div>
 
