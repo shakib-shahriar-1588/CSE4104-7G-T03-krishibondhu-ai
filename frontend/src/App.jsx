@@ -1,5 +1,5 @@
 import { Routes, Route, Link, useLocation, useNavigate } from 'react-router-dom';
-import { Home, Camera, MessageSquare, Leaf, LogOut, User, Globe } from 'lucide-react';
+import { Home, Camera, MessageSquare, Leaf, LogOut, User, Globe, Menu, Shield } from 'lucide-react';
 import { useLanguage } from './context/LanguageContext';
 import { useAuth } from './context/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
@@ -14,6 +14,8 @@ import RegisterPage from './pages/RegisterPage';
 import MyCropsPage from './pages/MyCropsPage';
 import FarmingGuidePage from './pages/FarmingGuidePage';
 import ProfilePage from './pages/ProfilePage';
+import AdminPage from './pages/AdminPage'; // <-- New
+import PestLibraryPage from './pages/PestLibraryPage'; // <-- New
 
 const BottomNav = () => {
   const location = useLocation();
@@ -58,24 +60,30 @@ const TopNav = () => {
       <Link to="/" className="flex items-center gap-2 text-green-700 font-bold text-2xl hover:text-green-800 transition">
         <Leaf size={28} /> KrishiBondhu AI
       </Link>
-      <div className="flex gap-6 font-medium text-gray-600 items-center">
+      <div className="flex gap-6 font-medium text-gray-600 items-center text-sm">
         <Link to="/" className="hover:text-green-700 transition">{lang === 'bn' ? 'হোম' : 'Home'}</Link>
         <Link to="/disease" className="hover:text-green-700 transition">{lang === 'bn' ? 'রোগ শনাক্ত' : 'Disease Scan'}</Link>
         <Link to="/chat" className="hover:text-green-700 transition">AI Chat</Link>
         <Link to="/weather" className="hover:text-green-700 transition">{lang === 'bn' ? 'আবহাওয়া' : 'Weather'}</Link>
+        <Link to="/crops" className="hover:text-green-700 transition">{lang === 'bn' ? 'আমার ফসল' : 'My Crops'}</Link>
+        <Link to="/guide" className="hover:text-green-700 transition">{lang === 'bn' ? 'কৃষি জ্ঞান' : 'Guide'}</Link>
+        <Link to="/pest-library" className="hover:text-green-700 transition">{lang === 'bn' ? 'পোকা ও রোগ' : 'Pest Library'}</Link>
         
-        <button onClick={toggleLang} className="flex items-center gap-1 text-green-700 font-bold hover:text-green-800 ml-2">
+        <button onClick={toggleLang} className="flex items-center gap-1 text-green-700 font-bold hover:text-green-800 ml-2 border-l pl-4 border-gray-300">
           <Globe size={18} /> {lang === 'bn' ? 'EN' : 'বাং'}
         </button>
 
         {user ? (
           <div className="flex items-center gap-4 ml-4 pl-4 border-l border-gray-300">
+            {user.role === 'ADMIN' && (
+              <Link to="/admin" className="flex items-center gap-1 text-red-600 font-bold hover:text-red-700 transition">
+                <Shield size={18} /> Admin
+              </Link>
+            )}
             <Link to="/profile" className="flex items-center gap-2 text-green-700 font-bold hover:text-green-800 transition bg-green-50 px-3 py-1.5 rounded-lg">
               <User size={18} /> {user.full_name}
             </Link>
-            <button onClick={handleLogout} className="text-red-500 hover:text-red-700 flex items-center gap-1">
-              <LogOut size={18} /> {lang === 'bn' ? 'লগআউট' : 'Logout'}
-            </button>
+            <button onClick={handleLogout} className="text-red-500 hover:text-red-700 flex items-center gap-1"><LogOut size={18} /> {lang === 'bn' ? 'লগআউট' : 'Logout'}</button>
           </div>
         ) : (
           <div className="flex gap-3 ml-4 pl-4 border-l border-gray-300">
@@ -98,13 +106,15 @@ function App() {
           <Route path="/disease" element={<DiseasePage />} />
           <Route path="/chat" element={<ChatPage />} />
           <Route path="/weather" element={<WeatherPage />} />
+          <Route path="/guide" element={<FarmingGuidePage />} />
+          <Route path="/pest-library" element={<PestLibraryPage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
-          <Route path="/guide" element={<FarmingGuidePage />} />
           
-          {/* PROTECTED ROUTES */}
+          {/* Protected Routes */}
           <Route path="/crops" element={<ProtectedRoute><MyCropsPage /></ProtectedRoute>} />
           <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
+          <Route path="/admin" element={<ProtectedRoute><AdminPage /></ProtectedRoute>} />
         </Routes>
       </main>
       <BottomNav />
