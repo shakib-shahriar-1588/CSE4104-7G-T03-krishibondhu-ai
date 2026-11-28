@@ -5,21 +5,7 @@ const helmet = require('helmet');
 const connectDB = require('./config/db');
 const { errorHandler } = require('./middleware/errorMiddleware');
 
-// Load environment variables
-dotenv.config();
-
-// Connect to Database
-connectDB();
-
-const app = express();
-
-// Security Middleware
-app.use(helmet());
-app.use(cors({ origin: process.env.CLIENT_URL || 'http://localhost:5173' }));
-app.use(express.json({ limit: '100kb' }));
-app.use('/api/admin', adminRoutes);
-
-// Import Routes
+// 1. Import ALL Routes First
 const authRoutes = require('./routes/authRoutes');
 const aiRoutes = require('./routes/aiRoutes');
 const weatherRoutes = require('./routes/weatherRoutes');
@@ -28,13 +14,27 @@ const farmRoutes = require('./routes/farmRoutes');
 const chatRoutes = require('./routes/chatRoutes');
 const adminRoutes = require('./routes/adminRoutes');
 
-// Mount Routes
+// Load environment variables
+dotenv.config();
+
+// Connect to Database
+connectDB();
+
+const app = express();
+
+// 2. Middleware
+app.use(helmet());
+app.use(cors({ origin: process.env.CLIENT_URL || 'http://localhost:5173' }));
+app.use(express.json({ limit: '100kb' }));
+
+// 3. Mount Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/ai', aiRoutes);
 app.use('/api/weather', weatherRoutes);
 app.use('/api/disease', diseaseRoutes);
 app.use('/api/records', farmRoutes);
 app.use('/api/chat', chatRoutes);
+app.use('/api/admin', adminRoutes); // <-- Now this works perfectly
 
 // Test Route
 app.get('/', (req, res) => {
