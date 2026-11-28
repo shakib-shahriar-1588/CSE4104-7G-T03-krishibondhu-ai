@@ -11,7 +11,10 @@ const DiseasePage = () => {
   const [selectedImage, setSelectedImage] = useState(null);
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState(null);
-  const fileInputRef = useRef(null);
+  
+  // Two separate refs for Camera and Gallery
+  const cameraInputRef = useRef(null);
+  const galleryInputRef = useRef(null);
 
   useEffect(() => {
     return () => {
@@ -59,12 +62,18 @@ const DiseasePage = () => {
 
       {!result && !loading && (
         <div className="animate-fade-in">
-          <input type="file" accept="image/*" ref={fileInputRef} onChange={handleImageChange} className="hidden" />
-          <button onClick={() => fileInputRef.current.click()} className="w-full bg-[#1b5e20] text-white p-6 rounded-3xl mb-4 flex items-center gap-4 shadow-md hover:bg-green-800 transition">
+          {/* CAMERA INPUT (capture="environment") */}
+          <input type="file" accept="image/*" capture="environment" ref={cameraInputRef} onChange={handleImageChange} className="hidden" />
+          
+          {/* GALLERY INPUT (no capture) */}
+          <input type="file" accept="image/*" ref={galleryInputRef} onChange={handleImageChange} className="hidden" />
+          
+          <button onClick={() => cameraInputRef.current.click()} className="w-full bg-[#1b5e20] text-white p-6 rounded-3xl mb-4 flex items-center gap-4 shadow-md hover:bg-green-800 transition">
             <div className="bg-white/20 p-3 rounded-full"><Camera size={32} className="text-yellow-300" /></div>
             <div className="text-left"><h2 className="text-2xl font-bold">{lang === 'bn' ? 'ছবি তুলুন' : 'Take Photo'}</h2><p className="text-sm text-gray-200 mt-1">{lang === 'bn' ? 'ক্যামেরা চালু হবে' : 'Camera will open'}</p></div>
           </button>
-          <button onClick={() => fileInputRef.current.click()} className="w-full bg-white border border-gray-300 text-gray-800 p-4 rounded-2xl mb-6 flex items-center justify-center gap-2 font-semibold shadow-sm hover:bg-gray-50 transition">
+          
+          <button onClick={() => galleryInputRef.current.click()} className="w-full bg-white border border-gray-300 text-gray-800 p-4 rounded-2xl mb-6 flex items-center justify-center gap-2 font-semibold shadow-sm hover:bg-gray-50 transition">
             <ImageIcon size={20} className="text-green-700" /> {lang === 'bn' ? 'গ্যালারি থেকে নিন' : 'Select from Gallery'}
           </button>
 
@@ -110,8 +119,6 @@ const DiseasePage = () => {
             </div>
           </div>
           
-          {/* REMOVED LISTEN BUTTON HERE */}
-
           <div className="flex gap-3 mb-6">
             <button className="flex-1 bg-white border border-gray-300 text-gray-800 py-3 rounded-xl flex items-center justify-center gap-2 font-semibold shadow-sm">
               <Bookmark size={18} className="text-green-700" /> {lang === 'bn' ? 'সংরক্ষণ' : 'Save'}
