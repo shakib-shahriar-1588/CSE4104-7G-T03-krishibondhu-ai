@@ -1,5 +1,5 @@
 import { Routes, Route, Link, useLocation, useNavigate } from 'react-router-dom';
-import { Home, Camera, MessageSquare, Leaf, LogOut, User, Globe, Menu, Shield } from 'lucide-react';
+import { Home, Camera, MessageSquare, Leaf, LogOut, User, Globe, Shield } from 'lucide-react';
 import { useLanguage } from './context/LanguageContext';
 import { useAuth } from './context/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
@@ -14,14 +14,16 @@ import RegisterPage from './pages/RegisterPage';
 import MyCropsPage from './pages/MyCropsPage';
 import FarmingGuidePage from './pages/FarmingGuidePage';
 import ProfilePage from './pages/ProfilePage';
-import AdminPage from './pages/AdminPage'; // <-- New
-import PestLibraryPage from './pages/PestLibraryPage'; // <-- New
+import AdminPage from './pages/AdminPage';
+import SavedAdvicePage from './pages/SavedAdvicePage';
+import FertilizerPage from './pages/FertilizerPage';
+import CropRecPage from './pages/CropRecPage';
+import RemindersPage from './pages/RemindersPage';
 
 const BottomNav = () => {
   const location = useLocation();
   const path = location.pathname;
   const { lang } = useLanguage();
-  
   const navItems = [
     { name: lang === 'bn' ? 'হোম' : 'Home', path: '/', icon: Home },
     { name: lang === 'bn' ? 'রোগ' : 'Scan', path: '/disease', icon: Camera },
@@ -50,10 +52,7 @@ const TopNav = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
 
-  const handleLogout = () => {
-    logout();
-    navigate('/login');
-  };
+  const handleLogout = () => { logout(); navigate('/login'); };
 
   return (
     <div className="hidden md:flex bg-white shadow-sm px-8 py-4 justify-between items-center sticky top-0 z-50">
@@ -65,9 +64,7 @@ const TopNav = () => {
         <Link to="/disease" className="hover:text-green-700 transition">{lang === 'bn' ? 'রোগ শনাক্ত' : 'Disease Scan'}</Link>
         <Link to="/chat" className="hover:text-green-700 transition">AI Chat</Link>
         <Link to="/weather" className="hover:text-green-700 transition">{lang === 'bn' ? 'আবহাওয়া' : 'Weather'}</Link>
-        <Link to="/crops" className="hover:text-green-700 transition">{lang === 'bn' ? 'আমার ফসল' : 'My Crops'}</Link>
         <Link to="/guide" className="hover:text-green-700 transition">{lang === 'bn' ? 'কৃষি জ্ঞান' : 'Guide'}</Link>
-        <Link to="/pest-library" className="hover:text-green-700 transition">{lang === 'bn' ? 'পোকা ও রোগ' : 'Pest Library'}</Link>
         
         <button onClick={toggleLang} className="flex items-center gap-1 text-green-700 font-bold hover:text-green-800 ml-2 border-l pl-4 border-gray-300">
           <Globe size={18} /> {lang === 'bn' ? 'EN' : 'বাং'}
@@ -107,14 +104,16 @@ function App() {
           <Route path="/chat" element={<ChatPage />} />
           <Route path="/weather" element={<WeatherPage />} />
           <Route path="/guide" element={<FarmingGuidePage />} />
-          <Route path="/pest-library" element={<PestLibraryPage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
           
-          {/* Protected Routes */}
           <Route path="/crops" element={<ProtectedRoute><MyCropsPage /></ProtectedRoute>} />
           <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
           <Route path="/admin" element={<ProtectedRoute><AdminPage /></ProtectedRoute>} />
+          <Route path="/fertilizer" element={<ProtectedRoute><FertilizerPage /></ProtectedRoute>} />
+          <Route path="/recommendation" element={<ProtectedRoute><CropRecPage /></ProtectedRoute>} />
+          <Route path="/reminders" element={<ProtectedRoute><RemindersPage /></ProtectedRoute>} />
+          <Route path="/saved" element={<ProtectedRoute><SavedAdvicePage /></ProtectedRoute>} />
         </Routes>
       </main>
       <BottomNav />
