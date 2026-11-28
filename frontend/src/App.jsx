@@ -4,7 +4,7 @@ import { useLanguage } from './context/LanguageContext';
 import { useAuth } from './context/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
 
-// Import Pages
+// --- CHECK THESE PATHS EXACTLY ---
 import HomePage from './pages/HomePage';
 import DiseasePage from './pages/DiseasePage';
 import ChatPage from './pages/ChatPage';
@@ -19,7 +19,6 @@ import SavedAdvicePage from './pages/SavedAdvicePage';
 import FertilizerPage from './pages/FertilizerPage';
 import CropRecPage from './pages/CropRecPage';
 import RemindersPage from './pages/RemindersPage';
-
 const BottomNav = () => {
   const location = useLocation();
   const path = location.pathname;
