@@ -17,6 +17,7 @@ const app = express();
 app.use(helmet());
 app.use(cors({ origin: process.env.CLIENT_URL || 'http://localhost:5173' }));
 app.use(express.json({ limit: '100kb' }));
+app.use('/api/admin', adminRoutes);
 
 // Import Routes
 const authRoutes = require('./routes/authRoutes');
@@ -25,6 +26,7 @@ const weatherRoutes = require('./routes/weatherRoutes');
 const diseaseRoutes = require('./routes/diseaseRoutes');
 const farmRoutes = require('./routes/farmRoutes');
 const chatRoutes = require('./routes/chatRoutes');
+const adminRoutes = require('./routes/adminRoutes');
 
 // Mount Routes
 app.use('/api/auth', authRoutes);
